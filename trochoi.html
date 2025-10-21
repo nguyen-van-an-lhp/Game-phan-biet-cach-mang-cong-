@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Trò Chơi Phân Biệt Các Cuộc Cách Mạng Công Nghiệp 1.0–3.0 | Educational Game: Industrial Revolutions</title>
+<meta name="description" content="Trò chơi phân biệt các cuộc Cách mạng công nghiệp 1.0–3.0. Giao diện tối sang trọng, bảng sáng nổi bật, đáp án random, tính giờ, chấm điểm, tối ưu TV 4K." />
+
+<style>
+:root{
+  --bg: #0c111b;
+  --panel: #ffffff;
+  --primary: #ff8a00;
+  --secondary: #1e88e5;
+  --ok: #2e7d32;
+  --bad: #d32f2f;
+  --border: #e0e6ed;
+  --text-main: #e3e8f5;
+  --text-sub: #90a4ae;
+  --radius: 18px;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  background:linear-gradient(180deg,#0c111b 0%,#111827 100%);
+  color:var(--text-main);
+  font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  user-select:none;
+  -webkit-font-smoothing:antialiased;
+}
+.app{min-height:100vh;display:grid;grid-template-rows:auto auto 1fr auto;gap:20px;padding:clamp(16px,2vw,28px)}
+
+header{
+  display:flex;justify-content:space-between;align-items:center;gap:20px;
+  background:#0f172a;border:1px solid rgba(255,255,255,.08);border-radius:var(--radius);
+  padding:clamp(14px,1.8vw,24px);
+  box-shadow:0 10px 40px rgba(0,0,0,.5);
+}
+.brand{display:flex;align-items:center;gap:16px}
+.logo{
+  width:clamp(36px,3vw,48px);height:clamp(36px,3vw,48px);
+  border-radius:12px;
+  background:conic-gradient(from 210deg,var(--primary),#ffd180 30%, #64b5f6 70%, var(--secondary));
+  box-shadow:0 0 30px rgba(255,138,0,.5);
+}
+.title h1{
+  margin:0;font-size:clamp(26px,3vw,48px);font-weight:800;letter-spacing:.3px;
+  background:linear-gradient(90deg,#ffb300,#ff8a00,#64b5f6);
+  -webkit-background-clip:text;color:transparent;text-transform:uppercase;
+}
+.title h2{
+  margin:6px 0 0;font-size:clamp(16px,1.2vw,20px);color:#90caf9;font-style:italic;
+}
+
+nav{display:flex;flex-wrap:wrap;gap:clamp(8px,1vw,14px)}
+.btn{
+  font-size:clamp(16px,1.3vw,22px);padding:.7em 1.1em;border-radius:10px;border:none;cursor:pointer;
+  transition:.15s;box-shadow:0 4px 16px rgba(0,0,0,.25);
+}
+.btn.primary{background:linear-gradient(180deg,#ff9800,#ff6f00);color:#fff}
+.btn.secondary{background:linear-gradient(180deg,#2196f3,#1565c0);color:#fff}
+.btn.success{background:linear-gradient(180deg,#43a047,#2e7d32);color:#fff}
+.btn.light{background:#fff;color:#111827}
+.btn:hover{transform:translateY(-2px);filter:brightness(1.1)}
+
+.status{
+  display:flex;justify-content:space-between;align-items:center;
+  background:#0f172a;border:1px solid rgba(255,255,255,.08);
+  border-radius:var(--radius);padding:clamp(12px,1.4vw,20px);
+  box-shadow:0 6px 24px rgba(0,0,0,.4);
+}
+.timer{font-size:clamp(20px,1.8vw,28px);font-weight:700;color:#ffb300}
+.score{font-size:clamp(20px,1.8vw,28px);font-weight:700;color:#81c784}
+
+.card{
+  background:var(--panel);border-radius:var(--radius);
+  box-shadow:0 20px 60px rgba(0,0,0,.6);overflow:hidden;color:#111;
+}
+.table-wrap{overflow:auto;border-radius:var(--radius)}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:clamp(16px,1.3vw,22px)}
+th,td{padding:clamp(10px,1vw,16px);border-bottom:1px solid var(--border);border-right:1px solid var(--border)}
+thead th{background:var(--secondary);color:#fff;font-weight:700;text-transform:uppercase}
+tbody td:first-child{background:#fff3e0;color:#bf360c;font-weight:700}
+td.select{cursor:pointer;text-align:center;color:#424242}
+td.select.placeholder{color:#9e9e9e;font-style:italic}
+tr:hover td.select{background:#f5f8ff}
+.correct{background:#e8f5e9 !important;outline:2px solid #81c784}
+.wrong{background:#ffebee !important;outline:2px solid #ef9a9a}
+
+/* Menu xổ đáp án */
+.menu{
+  position:fixed;z-index:1000;display:none;
+  min-width:clamp(280px,32vw,560px);max-height:min(65vh,560px);overflow:auto;
+  background:#ffffff;border-radius:16px;border:1px solid #dbe2ec;
+  box-shadow:0 30px 90px rgba(0,0,0,.6);
+}
+.menu h4{margin:12px 14px 10px;font-size:clamp(16px,1.4vw,22px);color:#0c111b}
+.opt{padding:14px 16px;cursor:pointer;border-top:1px solid #f0f3f8;background:#fff;font-size:clamp(16px,1.2vw,20px);color:#212121}
+.opt:first-of-type{border-top:none}
+.opt:hover{background:#fff8e1;outline:2px solid #ffe082}
+.actions{display:flex;gap:10px;padding:12px;border-top:1px solid #f0f3f8}
+.chip{padding:10px 12px;border-radius:10px;background:#fafafa;color:#37474f;border:1px solid #dbe2ec;cursor:pointer}
+.chip:hover{background:#f0f0f0}
+
+/* Footer nổi bật */
+footer{
+  background:#ffffff;
+  color:#0d47a1;
+  font-weight:700;
+  font-size:clamp(18px,1.8vw,24px);
+  text-align:center;
+  padding:18px 10px;
+  border-radius:var(--radius);
+  box-shadow:0 -4px 20px rgba(0,0,0,.3);
+}
+footer span{color:#ff6f00}
+</style>
+</head>
+
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <div class="logo"></div>
+      <div class="title">
+        <h1>Trò Chơi Phân Biệt Các Cuộc Cách Mạng Công Nghiệp Từ 1.0 đến 3.0</h1>
+        <h2>Educational Game: Industrial Revolutions 1.0 – 3.0</h2>
+      </div>
+    </div>
+    <nav>
+      <button id="btnFs" class="btn light">⛶ Fullscreen</button>
+      <button id="btnStart" class="btn primary">▶ Bắt đầu</button>
+      <button id="btnCheck" class="btn success">✅ Nộp bài</button>
+      <button id="btnShow" class="btn secondary">🧩 Đáp án mẫu</button>
+      <button id="btnReset" class="btn light">🧼 Reset</button>
+    </nav>
+  </header>
+
+  <section class="status">
+    <div id="timer" class="timer">🕒 00:00</div>
+    <div id="score" class="score">Điểm: —</div>
+  </section>
+
+  <main>
+    <article class="card table-wrap">
+      <table id="tbl">
+        <thead>
+          <tr>
+            <th>Tiêu chí</th>
+            <th>CMCN 1.0</th>
+            <th>CMCN 2.0</th>
+            <th>CMCN 3.0</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr data-row="time"><td>Thời gian</td><td class="select placeholder">Chạm để chọn ▾</td><td class="select placeholder">Chạm để chọn ▾</td><td class="select placeholder">Chạm để chọn ▾</td></tr>
+          <tr data-row="context"><td>Bối cảnh ra đời</td><td class="select placeholder">Chạm để chọn ▾</td><td class="select placeholder">Chạm để chọn ▾</td><td class="select placeholder">Chạm để chọn ▾</td></tr>
+          <tr data-row="energy"><td>Nguồn năng lượng chủ đạo</td><td class="select placeholder">Chạm để chọn ▾</td><td class="select placeholder">Chạm để chọn ▾</td><td class="select placeholder">Chạm để chọn ▾</td></tr>
+          <tr data-row="tech"><td>Công nghệ tiêu biểu</td><td class="select placeholder">Chạm để chọn ▾</td><td class="select placeholder">Chạm để chọn ▾</td><td class="select placeholder">Chạm để chọn ▾</td></tr>
+          <tr data-row="field"><td>Lĩnh vực nổi bật</td><td class="select placeholder">Chạm để chọn ▾</td><td class="select placeholder">Chạm để chọn ▾</td><td class="select placeholder">Chạm để chọn ▾</td></tr>
+          <tr data-row="keyword"><td>Từ khóa đặc trưng</td><td class="select placeholder">Chạm để chọn ▾</td><td class="select placeholder">Chạm để chọn ▾</td><td class="select placeholder">Chạm để chọn ▾</td></tr>
+          <tr data-row="achievement"><td>Thành tựu tiêu biểu</td><td class="select placeholder">Chạm để chọn ▾</td><td class="select placeholder">Chạm để chọn ▾</td><td class="select placeholder">Chạm để chọn ▾</td></tr>
+          <tr data-row="impact"><td>Ảnh hưởng chính</td><td class="select placeholder">Chạm để chọn ▾</td><td class="select placeholder">Chạm để chọn ▾</td><td class="select placeholder">Chạm để chọn ▾</td></tr>
+        </tbody>
+      </table>
+    </article>
+  </main>
+
+  <footer>Thiết kế bởi: <span>Nguyễn Văn An</span> – Trường THPT chuyên Lê Hồng Phong TP.HCM</footer>
+</div>
+
+<div id="menu" class="menu"></div>
+
+<script>
+const ANSWERS={
+  time:["Cuối thế kỷ XVIII – đầu XIX","Cuối XIX – đầu XX (1914)","Nửa sau thế kỷ XX"],
+  context:["Nhu cầu tăng năng suất sản xuất thủ công ở Anh","Phát triển tư bản độc quyền, đô thị hóa, toàn cầu hóa","Hậu Thế chiến II, bùng nổ khoa học – công nghệ"],
+  energy:["Hơi nước, than đá","Điện, dầu mỏ","Điện tử, hạt nhân"],
+  tech:["Máy hơi nước, cơ khí hóa","Dây chuyền điện, động cơ đốt trong","Máy tính, Internet, tự động hóa"],
+  field:["Cơ khí, dệt, khai khoáng","Ô tô, hóa dầu, thép, viễn thông","Điện tử, tin học, sinh học"],
+  keyword:["Cơ giới hóa","Điện khí hóa","Tự động hóa"],
+  achievement:["Máy hơi nước (James Watt)","Dây chuyền sản xuất (Ford)","Máy tính – Internet"],
+  impact:["Thay đổi sản xuất thủ công → cơ khí","Sản xuất hàng loạt, năng suất cao","Số hóa thông tin, toàn cầu hóa"]
+};
+
+const DISTRACTORS={
+  time:["Đầu thế kỷ XXI (sau 2000)","Giữa thế kỷ XVIII","Thế kỷ XVII"],
+  context:["Khủng hoảng dầu mỏ 1973","Khủng hoảng tài chính 2008","Đại khủng hoảng 1929–1933"],
+  energy:["Năng lượng gió – mặt trời","Thủy điện quy mô lớn","Khí tự nhiên hóa lỏng (LNG)"],
+  tech:["In 3D và robot cộng tác","Chuỗi khối (Blockchain)","Vệ tinh định vị GPS"],
+  field:["Du lịch – dịch vụ số","Hàng không dân dụng","Nông nghiệp hữu cơ"],
+  keyword:["Số hóa dữ liệu","Kết nối vạn vật","Tự chủ AI"],
+  achievement:["Máy bay phản lực thương mại","Vaccine công nghệ mRNA","Điện thoại thông minh"],
+  impact:["Tăng thương mại điện tử","Kinh tế tri thức nổi lên","Tự động hóa logistics"]
+};
+
+const $=(s,r=document)=>r.querySelector(s);const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const menu=$("#menu");let activeCell=null,timerRef=null,seconds=0,started=false;
+const shuffle=a=>{const b=a.slice();for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+const formatTime=s=>`${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
+
+function startTimer(){if(started)return;started=true;timerRef=setInterval(()=>{seconds++;$("#timer").textContent="🕒 "+formatTime(seconds)},1000)}
+function stopTimer(){clearInterval(timerRef);started=false;}
+function resetTimer(){stopTimer();seconds=0;$("#timer").textContent="🕒 00:00"}
+
+function optionsForRow(k){return shuffle([...(ANSWERS[k]||[]),...(DISTRACTORS[k]||[])])}
+function openMenuFor(c){activeCell=c;const k=c.closest("tr").dataset.row;const opts=optionsForRow(k);
+let html=`<h4>Chọn nội dung:</h4>`;html+=opts.map(v=>`<div class='opt' data-val="${v.replace(/"/g,"&quot;")}">${v}</div>`).join('');
+html+=`<div class='actions'><div class='chip' data-act='clear'>Xóa ô</div><div class='chip' data-act='close'>Đóng</div></div>`;
+menu.innerHTML=html;const r=c.getBoundingClientRect();let top=r.bottom+10,left=r.left;
+const mw=Math.min(560,window.innerWidth-24);if(top+420>window.innerHeight)top=r.top-420;if(left+mw>window.innerWidth)left=window.innerWidth-mw-12;if(left<12)left=12;
+Object.assign(menu.style,{top:`${top}px`,left:`${left}px`,display:"block"});}
+function closeMenu(){menu.style.display="none";}
+function setCellValue(c,v){c.textContent=v;c.classList.remove("placeholder","correct","wrong")}
+function clearCell(c){c.textContent="Chạm để chọn ▾";c.classList.add("placeholder");c.classList.remove("correct","wrong")}
+function clearAll(){$$("#tbl td.select").forEach(clearCell)}
+
+function checkAndScore(){stopTimer();let correct=0,total=0;$$("tbody tr").forEach(tr=>{const k=tr.dataset.row;const ans=ANSWERS[k];
+tr.querySelectorAll("td.select").forEach((td,i)=>{total++;if(td.textContent.trim()===ans[i]){td.classList.add("correct");td.classList.remove("wrong");correct++;}else{td.classList.add("wrong");td.classList.remove("correct");}})});
+const pct=Math.round(correct/total*100);$("#score").textContent=`Điểm: ${correct}/${total} • ${pct}% • Thời gian: ${formatTime(seconds)}`;}
+
+function showAnswerKey(){$$("tbody tr").forEach(tr=>{const k=tr.dataset.row;const ans=ANSWERS[k];
+tr.querySelectorAll("td.select").forEach((td,i)=>{setCellValue(td,ans[i]);td.classList.add("correct");});});
+stopTimer();$("#score").textContent=`Đáp án mẫu • Thời gian: ${formatTime(seconds)}`;}
+
+function toggleFs(){const e=document.documentElement;if(!document.fullscreenElement)e.requestFullscreen?.();else document.exitFullscreen?.();}
+
+$$("td.select").forEach(td=>td.addEventListener("click",e=>{e.stopPropagation();openMenuFor(td)}));
+menu.addEventListener("click",e=>{const o=e.target.closest(".opt");const a=e.target.closest("[data-act]");
+if(o&&activeCell){setCellValue(activeCell,o.dataset.val);closeMenu();}
+else if(a){if(a.dataset.act==="clear"&&activeCell)clearCell(activeCell);closeMenu();}});
+document.addEventListener("click",e=>{if(!menu.contains(e.target))closeMenu()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeMenu()});
+$("#btnFs").addEventListener("click",toggleFs);
+$("#btnStart").addEventListener("click",startTimer);
+$("#btnCheck").addEventListener("click",checkAndScore);
+$("#btnShow").addEventListener("click",showAnswerKey);
+$("#btnReset").addEventListener("click",()=>{clearAll();resetTimer();$("#score").textContent="Điểm: —";});
+resetTimer();
+</script>
+</body>
+</html>
