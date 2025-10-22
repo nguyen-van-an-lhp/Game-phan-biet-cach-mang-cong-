@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -63,6 +64,7 @@ nav{display:flex;flex-wrap:wrap;gap:clamp(8px,1vw,14px)}
 .btn.secondary{background:linear-gradient(180deg,#2196f3,#1565c0);color:#fff}
 .btn.success{background:linear-gradient(180deg,#43a047,#2e7d32);color:#fff}
 .btn.light{background:#fff;color:#111827}
+.btn.warn{background:linear-gradient(180deg,#ef5350,#c62828);color:#fff}
 .btn:hover{transform:translateY(-2px);filter:brightness(1.1)}
 
 .status{
@@ -104,7 +106,7 @@ tr:hover td.select{background:#f5f8ff}
 .chip{padding:10px 12px;border-radius:10px;background:#fafafa;color:#37474f;border:1px solid #dbe2ec;cursor:pointer}
 .chip:hover{background:#f0f0f0}
 
-/* Footer nổi bật */
+/* Footer */
 footer{
   background:#ffffff;
   color:#0d47a1;
@@ -116,6 +118,45 @@ footer{
   box-shadow:0 -4px 20px rgba(0,0,0,.3);
 }
 footer span{color:#ff6f00}
+
+/* Modal chung */
+.modal{
+  position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.8);z-index:2000;visibility:hidden;opacity:0;transition:.25s ease;
+}
+.modal.active{visibility:visible;opacity:1}
+.modal-box{
+  background:#fff;padding:22px 26px;border-radius:16px;text-align:center;max-width:640px;width:92%;
+  box-shadow:0 30px 90px rgba(0,0,0,.6);
+}
+.modal-box h2{margin:0 0 8px;color:#0d47a1}
+
+/* Modal Nhập Tên */
+#playerName{
+  width:100%;padding:12px;font-size:20px;margin:10px 0 6px;border-radius:10px;border:1px solid #cfd8dc;text-align:center;
+}
+.virtual-keys{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;margin-top:8px}
+.key{background:#eeeeee;border:none;padding:10px;font-size:16px;border-radius:8px;cursor:pointer}
+.key:active{background:#dcdcdc}
+#btnConfirmName{margin-top:12px;padding:10px 16px;border:none;border-radius:10px;background:#ff9800;color:#fff;font-size:18px;cursor:pointer}
+
+/* Bảng xếp hạng nổi */
+#leaderboard{
+  position:fixed;right:16px;bottom:16px;z-index:1200;background:#ffffff;color:#111;padding:12px 14px;border-radius:14px;
+  min-width:260px;max-width:28vw;box-shadow:0 10px 40px rgba(0,0,0,.35);border:1px solid #e0e6ed;
+}
+#leaderboard h3{margin:0 0 8px;text-align:center;color:#0d47a1}
+.rank{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #eceff1;padding:6px 0;font-size:16px}
+.rank:last-child{border-bottom:none}
+.rank .name{font-weight:600}
+.rank .meta{color:#455a64}
+.muted{opacity:.65}
+
+/* Khóa click khi chưa bắt đầu */
+.locked td.select{pointer-events:none;opacity:.6}
+
+/* A11y: vùng thông báo */
+.sr-live{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden}
 </style>
 </head>
 
@@ -123,29 +164,33 @@ footer span{color:#ff6f00}
 <div class="app">
   <header>
     <div class="brand">
-      <div class="logo"></div>
+      <div class="logo" aria-hidden="true"></div>
       <div class="title">
         <h1>Trò Chơi Phân Biệt Các Cuộc Cách Mạng Công Nghiệp Từ 1.0 đến 3.0</h1>
         <h2>Educational Game: Industrial Revolutions 1.0 – 3.0</h2>
       </div>
     </div>
     <nav>
-      <button id="btnFs" class="btn light">⛶ Fullscreen</button>
+      <button id="btnFs" class="btn light" aria-label="Bật toàn màn hình">⛶ Fullscreen</button>
       <button id="btnStart" class="btn primary">▶ Bắt đầu</button>
       <button id="btnCheck" class="btn success">✅ Nộp bài</button>
       <button id="btnShow" class="btn secondary">🧩 Đáp án mẫu</button>
       <button id="btnReset" class="btn light">🧼 Reset</button>
+      <!-- Bổ sung yêu cầu -->
+      <button id="btnNewPlayer" class="btn light">👤 Người chơi mới</button>
+      <button id="btnHistory" class="btn light">📜 Lịch sử</button>
+      <button id="btnClearLB" class="btn warn">🗑️ Xóa BXH</button>
     </nav>
   </header>
 
   <section class="status">
-    <div id="timer" class="timer">🕒 00:00</div>
-    <div id="score" class="score">Điểm: —</div>
+    <div id="timer" class="timer" aria-live="polite">🕒 00:00</div>
+    <div id="score" class="score" aria-live="polite">Điểm: —</div>
   </section>
 
   <main>
     <article class="card table-wrap">
-      <table id="tbl">
+      <table id="tbl" class="locked" aria-label="Bảng ghép tiêu chí các cuộc cách mạng công nghiệp">
         <thead>
           <tr>
             <th>Tiêu chí</th>
@@ -155,25 +200,70 @@ footer span{color:#ff6f00}
           </tr>
         </thead>
         <tbody>
-          <tr data-row="time"><td>Thời gian</td><td class="select placeholder">Chạm để chọn ▾</td><td class="select placeholder">Chạm để chọn ▾</td><td class="select placeholder">Chạm để chọn ▾</td></tr>
-          <tr data-row="context"><td>Bối cảnh ra đời</td><td class="select placeholder">Chạm để chọn ▾</td><td class="select placeholder">Chạm để chọn ▾</td><td class="select placeholder">Chạm để chọn ▾</td></tr>
-          <tr data-row="energy"><td>Nguồn năng lượng chủ đạo</td><td class="select placeholder">Chạm để chọn ▾</td><td class="select placeholder">Chạm để chọn ▾</td><td class="select placeholder">Chạm để chọn ▾</td></tr>
-          <tr data-row="tech"><td>Công nghệ tiêu biểu</td><td class="select placeholder">Chạm để chọn ▾</td><td class="select placeholder">Chạm để chọn ▾</td><td class="select placeholder">Chạm để chọn ▾</td></tr>
-          <tr data-row="field"><td>Lĩnh vực nổi bật</td><td class="select placeholder">Chạm để chọn ▾</td><td class="select placeholder">Chạm để chọn ▾</td><td class="select placeholder">Chạm để chọn ▾</td></tr>
-          <tr data-row="keyword"><td>Từ khóa đặc trưng</td><td class="select placeholder">Chạm để chọn ▾</td><td class="select placeholder">Chạm để chọn ▾</td><td class="select placeholder">Chạm để chọn ▾</td></tr>
-          <tr data-row="achievement"><td>Thành tựu tiêu biểu</td><td class="select placeholder">Chạm để chọn ▾</td><td class="select placeholder">Chạm để chọn ▾</td><td class="select placeholder">Chạm để chọn ▾</td></tr>
-          <tr data-row="impact"><td>Ảnh hưởng chính</td><td class="select placeholder">Chạm để chọn ▾</td><td class="select placeholder">Chạm để chọn ▾</td><td class="select placeholder">Chạm để chọn ▾</td></tr>
+          <tr data-row="time"><td>Thời gian</td><td class="select placeholder" tabindex="0">Chạm để chọn ▾</td><td class="select placeholder" tabindex="0">Chạm để chọn ▾</td><td class="select placeholder" tabindex="0">Chạm để chọn ▾</td></tr>
+          <tr data-row="context"><td>Bối cảnh ra đời</td><td class="select placeholder" tabindex="0">Chạm để chọn ▾</td><td class="select placeholder" tabindex="0">Chạm để chọn ▾</td><td class="select placeholder" tabindex="0">Chạm để chọn ▾</td></tr>
+          <tr data-row="energy"><td>Nguồn năng lượng chủ đạo</td><td class="select placeholder" tabindex="0">Chạm để chọn ▾</td><td class="select placeholder" tabindex="0">Chạm để chọn ▾</td><td class="select placeholder" tabindex="0">Chạm để chọn ▾</td></tr>
+          <tr data-row="tech"><td>Công nghệ tiêu biểu</td><td class="select placeholder" tabindex="0">Chạm để chọn ▾</td><td class="select placeholder" tabindex="0">Chạm để chọn ▾</td><td class="select placeholder" tabindex="0">Chạm để chọn ▾</td></tr>
+          <tr data-row="field"><td>Lĩnh vực nổi bật</td><td class="select placeholder" tabindex="0">Chạm để chọn ▾</td><td class="select placeholder" tabindex="0">Chạm để chọn ▾</td><td class="select placeholder" tabindex="0">Chạm để chọn ▾</td></tr>
+          <tr data-row="keyword"><td>Từ khóa đặc trưng</td><td class="select placeholder" tabindex="0">Chạm để chọn ▾</td><td class="select placeholder" tabindex="0">Chạm để chọn ▾</td><td class="select placeholder" tabindex="0">Chạm để chọn ▾</td></tr>
+          <tr data-row="achievement"><td>Thành tựu tiêu biểu</td><td class="select placeholder" tabindex="0">Chạm để chọn ▾</td><td class="select placeholder" tabindex="0">Chạm để chọn ▾</td><td class="select placeholder" tabindex="0">Chạm để chọn ▾</td></tr>
+          <tr data-row="impact"><td>Ảnh hưởng chính</td><td class="select placeholder" tabindex="0">Chạm để chọn ▾</td><td class="select placeholder" tabindex="0">Chạm để chọn ▾</td><td class="select placeholder" tabindex="0">Chạm để chọn ▾</td></tr>
         </tbody>
       </table>
     </article>
   </main>
 
+  <section id="leaderboard" aria-label="Bảng xếp hạng">
+    <h3>🏆 Xếp hạng</h3>
+    <div id="rankList"></div>
+    <div class="muted" style="font-size:12px;margin-top:6px;">Lưu cục bộ (LocalStorage)</div>
+  </section>
+
   <footer>Thiết kế bởi: <span>Nguyễn Văn An</span> – Trường THPT chuyên Lê Hồng Phong TP.HCM</footer>
 </div>
 
-<div id="menu" class="menu"></div>
+<!-- Modal nhập tên người chơi -->
+<div id="playerModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="playerTitle">
+  <div class="modal-box">
+    <h2 id="playerTitle">Nhập tên người chơi</h2>
+    <input id="playerName" type="text" placeholder="Nhập tên..." autocomplete="off" aria-label="Tên người chơi">
+    <div class="virtual-keys" id="virtualKeyboard" aria-hidden="false"></div>
+    <button id="btnConfirmName">OK</button>
+  </div>
+</div>
+
+<!-- Modal Review -->
+<div id="reviewModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="reviewTitle">
+  <div class="modal-box">
+    <h2 id="reviewTitle">🎉 Kết quả lượt chơi</h2>
+    <p id="reviewText" style="margin:8px 0 16px;color:#37474f"></p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+      <button id="btnReviewClose" class="btn light">Đóng</button>
+      <button id="btnReviewNew" class="btn primary">👤 Người chơi mới</button>
+      <button id="btnReviewHistory" class="btn secondary">📜 Lịch sử</button>
+    </div>
+    <div class="muted" style="margin-top:10px;font-size:12px">Bạn có thể xem chi tiết đúng/sai ngay trên bảng hiện tại.</div>
+  </div>
+</div>
+
+<!-- Modal Lịch sử -->
+<div id="historyModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="historyTitle">
+  <div class="modal-box">
+    <h2 id="historyTitle">📜 Lịch sử & Bảng xếp hạng đầy đủ</h2>
+    <div id="historyList" style="max-height:52vh;overflow:auto;text-align:left"></div>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:12px">
+      <button id="btnHistoryClose" class="btn light">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<!-- ARIA live vùng ẩn cho thông báo -->
+<div class="sr-live" aria-live="polite" id="liveRegion"></div>
+
+<div id="menu" class="menu" role="listbox" aria-label="Chọn nội dung"></div>
 
 <script>
+/* ========= DỮ LIỆU GỐC ========= */
 const ANSWERS={
   time:["Cuối thế kỷ XVIII – đầu XIX","Cuối XIX – đầu XX (1914)","Nửa sau thế kỷ XX"],
   context:["Nhu cầu tăng năng suất sản xuất thủ công ở Anh","Phát triển tư bản độc quyền, đô thị hóa, toàn cầu hóa","Hậu Thế chiến II, bùng nổ khoa học – công nghệ"],
@@ -184,7 +274,6 @@ const ANSWERS={
   achievement:["Máy hơi nước (James Watt)","Dây chuyền sản xuất (Ford)","Máy tính – Internet"],
   impact:["Thay đổi sản xuất thủ công → cơ khí","Sản xuất hàng loạt, năng suất cao","Số hóa thông tin, toàn cầu hóa"]
 };
-
 const DISTRACTORS={
   time:["Đầu thế kỷ XXI (sau 2000)","Giữa thế kỷ XVIII","Thế kỷ XVII"],
   context:["Khủng hoảng dầu mỏ 1973","Khủng hoảng tài chính 2008","Đại khủng hoảng 1929–1933"],
@@ -196,49 +285,307 @@ const DISTRACTORS={
   impact:["Tăng thương mại điện tử","Kinh tế tri thức nổi lên","Tự động hóa logistics"]
 };
 
-const $=(s,r=document)=>r.querySelector(s);const $$=(s,r=document)=>[...r.querySelectorAll(s)];
-const menu=$("#menu");let activeCell=null,timerRef=null,seconds=0,started=false;
+/* ========= TIỆN ÍCH ========= */
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const menu=$("#menu");
+let activeCell=null,timerRef=null,seconds=0,started=false;
+let currentPlayer="", leaderboard=[];
+
 const shuffle=a=>{const b=a.slice();for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
 const formatTime=s=>`${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
 
-function startTimer(){if(started)return;started=true;timerRef=setInterval(()=>{seconds++;$("#timer").textContent="🕒 "+formatTime(seconds)},1000)}
-function stopTimer(){clearInterval(timerRef);started=false;}
-function resetTimer(){stopTimer();seconds=0;$("#timer").textContent="🕒 00:00"}
+function announce(msg){$("#liveRegion").textContent=msg;}
+function startTimer(){ if(started) return; started=true; timerRef=setInterval(()=>{seconds++;$("#timer").textContent="🕒 "+formatTime(seconds)},1000); }
+function stopTimer(){ clearInterval(timerRef); started=false; }
+function resetTimer(){ stopTimer(); seconds=0; $("#timer").textContent="🕒 00:00"; }
+
+function lockBoard(lock){
+  const tbl=$("#tbl");
+  if(lock){ tbl.classList.add("locked"); $$("td.select").forEach(td=>td.style.pointerEvents="none"); }
+  else { tbl.classList.remove("locked"); $$("td.select").forEach(td=>td.style.pointerEvents="auto"); }
+}
 
 function optionsForRow(k){return shuffle([...(ANSWERS[k]||[]),...(DISTRACTORS[k]||[])])}
-function openMenuFor(c){activeCell=c;const k=c.closest("tr").dataset.row;const opts=optionsForRow(k);
-let html=`<h4>Chọn nội dung:</h4>`;html+=opts.map(v=>`<div class='opt' data-val="${v.replace(/"/g,"&quot;")}">${v}</div>`).join('');
-html+=`<div class='actions'><div class='chip' data-act='clear'>Xóa ô</div><div class='chip' data-act='close'>Đóng</div></div>`;
-menu.innerHTML=html;const r=c.getBoundingClientRect();let top=r.bottom+10,left=r.left;
-const mw=Math.min(560,window.innerWidth-24);if(top+420>window.innerHeight)top=r.top-420;if(left+mw>window.innerWidth)left=window.innerWidth-mw-12;if(left<12)left=12;
-Object.assign(menu.style,{top:`${top}px`,left:`${left}px`,display:"block"});}
+function openMenuFor(c){
+  if($("#tbl").classList.contains("locked")) return;
+  activeCell=c;
+  const k=c.closest("tr").dataset.row;
+  const opts=optionsForRow(k);
+  let html=`<h4>Chọn nội dung:</h4>`;
+  html+=opts.map(v=>`<div class='opt' role="option" data-val="${v.replace(/"/g,"&quot;")}">${v}</div>`).join('');
+  html+=`<div class='actions'><div class='chip' data-act='clear'>Xóa ô</div><div class='chip' data-act='close'>Đóng</div></div>`;
+  menu.innerHTML=html;
+  const r=c.getBoundingClientRect();
+  let top=r.bottom+10,left=r.left;
+  const mw=Math.min(560,window.innerWidth-24);
+  if(top+420>window.innerHeight)top=r.top-420;
+  if(left+mw>window.innerWidth)left=window.innerWidth-mw-12;
+  if(left<12)left=12;
+  Object.assign(menu.style,{top:`${top}px`,left:`${left}px`,display:"block"});
+}
 function closeMenu(){menu.style.display="none";}
-function setCellValue(c,v){c.textContent=v;c.classList.remove("placeholder","correct","wrong")}
-function clearCell(c){c.textContent="Chạm để chọn ▾";c.classList.add("placeholder");c.classList.remove("correct","wrong")}
-function clearAll(){$$("#tbl td.select").forEach(clearCell)}
+function setCellValue(c,v){ c.textContent=v; c.classList.remove("placeholder","correct","wrong"); }
+function clearCell(c){ c.textContent="Chạm để chọn ▾"; c.classList.add("placeholder"); c.classList.remove("correct","wrong"); }
+function clearAll(){ $$("#tbl td.select").forEach(clearCell); }
 
-function checkAndScore(){stopTimer();let correct=0,total=0;$$("tbody tr").forEach(tr=>{const k=tr.dataset.row;const ans=ANSWERS[k];
-tr.querySelectorAll("td.select").forEach((td,i)=>{total++;if(td.textContent.trim()===ans[i]){td.classList.add("correct");td.classList.remove("wrong");correct++;}else{td.classList.add("wrong");td.classList.remove("correct");}})});
-const pct=Math.round(correct/total*100);$("#score").textContent=`Điểm: ${correct}/${total} • ${pct}% • Thời gian: ${formatTime(seconds)}`;}
+function computeAndRenderScore(){
+  stopTimer();
+  let correct=0,total=0;
+  $$("tbody tr").forEach(tr=>{
+    const k=tr.dataset.row;
+    const ans=ANSWERS[k];
+    tr.querySelectorAll("td.select").forEach((td,i)=>{
+      total++;
+      const user=td.textContent.trim();
+      const right=ans[i];
+      if(user===right){
+        td.classList.add("correct");
+        td.classList.remove("wrong");
+        correct++;
+      } else {
+        td.classList.add("wrong");
+        td.classList.remove("correct");
+        const shownUser = user && user!=="Chạm để chọn ▾" ? user : "—";
+        td.innerHTML = `<span style="text-decoration: line-through; color:var(--bad);">${shownUser}</span><br>
+                        <span style="color:var(--ok); font-weight:bold;">${right}</span>`;
+      }
+    });
+  });
+  const pct=Math.round(correct/total*100);
+  const time=formatTime(seconds);
+  $("#score").textContent=`Điểm: ${correct}/${total} • ${pct}% • Thời gian: ${time}`;
+  return {pct, time};
+}
 
-function showAnswerKey(){$$("tbody tr").forEach(tr=>{const k=tr.dataset.row;const ans=ANSWERS[k];
-tr.querySelectorAll("td.select").forEach((td,i)=>{setCellValue(td,ans[i]);td.classList.add("correct");});});
-stopTimer();$("#score").textContent=`Đáp án mẫu • Thời gian: ${formatTime(seconds)}`;}
+/* ========= ĐÁP ÁN MẪU ========= */
+function showAnswerKey(){
+  $$("tbody tr").forEach(tr=>{
+    const k=tr.dataset.row;
+    const ans=ANSWERS[k];
+    tr.querySelectorAll("td.select").forEach((td,i)=>{
+      setCellValue(td,ans[i]);
+      td.classList.add("correct");
+    });
+  });
+  stopTimer();
+  $("#score").textContent=`Đáp án mẫu • Thời gian: ${formatTime(seconds)}`;
+  announce("Đã hiển thị đáp án mẫu");
+}
 
-function toggleFs(){const e=document.documentElement;if(!document.fullscreenElement)e.requestFullscreen?.();else document.exitFullscreen?.();}
+/* ========= FULLSCREEN ========= */
+function toggleFs(){
+  const e=document.documentElement;
+  if(!document.fullscreenElement) e.requestFullscreen?.();
+  else document.exitFullscreen?.();
+}
 
-$$("td.select").forEach(td=>td.addEventListener("click",e=>{e.stopPropagation();openMenuFor(td)}));
-menu.addEventListener("click",e=>{const o=e.target.closest(".opt");const a=e.target.closest("[data-act]");
-if(o&&activeCell){setCellValue(activeCell,o.dataset.val);closeMenu();}
-else if(a){if(a.dataset.act==="clear"&&activeCell)clearCell(activeCell);closeMenu();}});
-document.addEventListener("click",e=>{if(!menu.contains(e.target))closeMenu()});
-document.addEventListener("keydown",e=>{if(e.key==="Escape")closeMenu()});
+/* ========= LEADERBOARD (LocalStorage) ========= */
+function loadLeaderboard(){
+  try{
+    const raw=localStorage.getItem("cmcn_leaderboard");
+    leaderboard = raw ? JSON.parse(raw) : [];
+  }catch{ leaderboard=[]; }
+  renderLeaderboard();
+}
+function saveLeaderboard(){
+  try{ localStorage.setItem("cmcn_leaderboard", JSON.stringify(leaderboard)); }catch{}
+}
+function renderLeaderboard(){
+  const rank=$("#rankList");
+  if(!leaderboard.length){ rank.innerHTML = `<div class="muted">Chưa có dữ liệu</div>`; return; }
+  rank.innerHTML = leaderboard
+    .slice(0,20)
+    .map((p,i)=>`<div class="rank"><span class="name">${i+1}. ${p.name}</span><span class="meta">${p.score}% • ${p.time}</span></div>`)
+    .join("");
+}
+function addToLeaderboard(name,score,time){
+  const stamp = new Date().toLocaleString();
+  leaderboard.push({name,score,time,stamp});
+  leaderboard.sort((a,b)=> b.score - a.score || a.time.localeCompare(b.time));
+  saveLeaderboard();
+  renderLeaderboard();
+}
+function clearLeaderboard(){
+  leaderboard = [];
+  saveLeaderboard();
+  renderLeaderboard();
+}
+
+/* ========= HIỆN LỊCH SỬ ========= */
+function openHistory(){
+  const box=$("#historyList");
+  if(!leaderboard.length){
+    box.innerHTML = `<div class="muted">Chưa có dữ liệu</div>`;
+  }else{
+    box.innerHTML = `
+      <table style="width:100%;border-collapse:collapse;font-size:16px">
+        <thead>
+          <tr style="background:#e3f2fd">
+            <th style="text-align:left;padding:8px;border-bottom:1px solid #ccc">#</th>
+            <th style="text-align:left;padding:8px;border-bottom:1px solid #ccc">Người chơi</th>
+            <th style="text-align:left;padding:8px;border-bottom:1px solid #ccc">Điểm</th>
+            <th style="text-align:left;padding:8px;border-bottom:1px solid #ccc">Thời gian</th>
+            <th style="text-align:left;padding:8px;border-bottom:1px solid #ccc">Thời điểm</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${leaderboard.map((p,i)=>`
+            <tr>
+              <td style="padding:8px;border-bottom:1px solid #eee">${i+1}</td>
+              <td style="padding:8px;border-bottom:1px solid #eee">${p.name}</td>
+              <td style="padding:8px;border-bottom:1px solid #eee">${p.score}%</td>
+              <td style="padding:8px;border-bottom:1px solid #eee">${p.time}</td>
+              <td style="padding:8px;border-bottom:1px solid #eee">${p.stamp||""}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+  }
+  $("#historyModal").classList.add("active");
+}
+
+/* ========= MODAL NHẬP TÊN + BÀN PHÍM ẢO ========= */
+const modal=$("#playerModal");
+const nameInput=$("#playerName");
+function buildVirtualKeyboard(){
+  const keys="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.←␣".split("");
+  const vk=$("#virtualKeyboard");
+  vk.innerHTML="";
+  keys.forEach(k=>{
+    const btn=document.createElement("button");
+    btn.className="key";
+    btn.type="button";
+    btn.textContent = (k==="␣") ? "Cách" : k;
+    btn.addEventListener("click",()=>{
+      if(k==="←") nameInput.value = nameInput.value.slice(0,-1);
+      else if(k==="␣") nameInput.value += " ";
+      else nameInput.value += k;
+      nameInput.focus();
+    });
+    vk.appendChild(btn);
+  });
+}
+function openNameModal(){
+  modal.classList.add("active");
+  nameInput.value="";
+  nameInput.focus();
+}
+function closeNameModal(){ modal.classList.remove("active"); }
+
+/* ========= MODAL REVIEW ========= */
+function openReviewModal(summaryText){
+  $("#reviewText").textContent = summaryText;
+  $("#reviewModal").classList.add("active");
+}
+function closeReviewModal(){ $("#reviewModal").classList.remove("active"); }
+
+/* ========= HÀNH VI NÚT ========= */
+$$("td.select").forEach(td=>{
+  td.addEventListener("click",e=>{ e.stopPropagation(); openMenuFor(td); });
+  td.addEventListener("keydown",e=>{
+    if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openMenuFor(td); }
+  });
+});
+menu.addEventListener("click",e=>{
+  const o=e.target.closest(".opt");
+  const a=e.target.closest("[data-act]");
+  if(o && activeCell){ setCellValue(activeCell,o.dataset.val); closeMenu(); }
+  else if(a){
+    if(a.dataset.act==="clear" && activeCell) clearCell(activeCell);
+    closeMenu();
+  }
+});
+document.addEventListener("click",e=>{ if(!menu.contains(e.target)) closeMenu(); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeMenu(); });
+
 $("#btnFs").addEventListener("click",toggleFs);
-$("#btnStart").addEventListener("click",startTimer);
-$("#btnCheck").addEventListener("click",checkAndScore);
+
+/* Bắt đầu lần đầu: mở modal nhập tên */
+$("#btnStart").addEventListener("click",()=>{
+  if(started) return; // đang chơi thì không
+  openNameModal();
+});
+
+/* Người chơi mới: chỉ khi bấm nút này mới thêm người chơi mới (quy trình như Start) */
+$("#btnNewPlayer").addEventListener("click",()=>{
+  openNameModal();
+});
+
+/* Xác nhận tên → reset bảng cũ + mở khóa + bắt đầu timer */
+$("#btnConfirmName").addEventListener("click",()=>{
+  currentPlayer = nameInput.value.trim() || "Người chơi";
+  closeNameModal();
+  // Quy trình yêu cầu: reset toàn bộ nội dung của người chơi cũ
+  clearAll();
+  $("#score").textContent="Điểm: —";
+  resetTimer();
+  lockBoard(false);
+  startTimer();
+  announce(`Bắt đầu cho người chơi ${currentPlayer}`);
+});
+
+/* Phím Enter trong input cũng xác nhận */
+nameInput.addEventListener("keydown",(e)=>{
+  if(e.key==="Enter"){
+    $("#btnConfirmName").click();
+  }
+});
+
+/* Nộp bài: chấm điểm + lưu leaderboard + Review (không tự thêm người chơi mới) */
+$("#btnCheck").addEventListener("click",()=>{
+  if($("#tbl").classList.contains("locked")) return; // chưa bắt đầu
+  const {pct, time} = computeAndRenderScore();
+  addToLeaderboard(currentPlayer || "Người chơi", pct, time);
+  lockBoard(true); // kết thúc lượt
+  announce(`Lượt chơi kết thúc. Điểm ${pct}% trong ${time}.`);
+  openReviewModal(`👤 ${currentPlayer} • Điểm: ${pct}% • Thời gian: ${time}`);
+});
+
+/* Review buttons */
+$("#btnReviewClose").addEventListener("click", closeReviewModal);
+$("#btnReviewHistory").addEventListener("click", ()=>{
+  closeReviewModal();
+  openHistory();
+});
+$("#btnReviewNew").addEventListener("click", ()=>{
+  closeReviewModal();
+  // chỉ khi bấm Người chơi mới mới vào quy trình thêm người chơi
+  openNameModal();
+});
+
+/* Đáp án mẫu: giữ nguyên hành vi */
 $("#btnShow").addEventListener("click",showAnswerKey);
-$("#btnReset").addEventListener("click",()=>{clearAll();resetTimer();$("#score").textContent="Điểm: —";});
-resetTimer();
+
+/* Reset: xóa bài hiện tại, dừng timer, khóa bảng (KHÔNG ảnh hưởng BXH) */
+$("#btnReset").addEventListener("click",()=>{
+  clearAll();
+  resetTimer();
+  $("#score").textContent="Điểm: —";
+  lockBoard(true);
+  announce("Đã reset. Nhấn Bắt đầu hoặc Người chơi mới để nhập tên và chơi.");
+});
+
+/* Lịch sử: xem toàn bộ kết quả người chơi */
+$("#btnHistory").addEventListener("click", openHistory);
+$("#btnHistoryClose").addEventListener("click", ()=>$("#historyModal").classList.remove("active"));
+
+/* Xóa toàn bộ BXH */
+$("#btnClearLB").addEventListener("click",()=>{
+  if(confirm("Bạn chắc chắn muốn xóa toàn bộ BXH? Hành động này không thể hoàn tác.")){
+    clearLeaderboard();
+    announce("Đã xóa toàn bộ BXH.");
+  }
+});
+
+/* Khởi tạo */
+(function init(){
+  buildVirtualKeyboard();
+  lockBoard(true);       // Khóa trước khi nhập tên
+  resetTimer();          // Hiển thị 00:00
+  loadLeaderboard();     // Nạp BXH cũ (LocalStorage)
+})();
 </script>
 </body>
 </html>
